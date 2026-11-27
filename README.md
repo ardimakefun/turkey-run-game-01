@@ -1,5 +1,9 @@
 # Turkey Run — Thanksgiving Escape
 
+[![make.fun · turkey-run-game-01](https://make.fun/badge/turkey-run-game-01.svg)](https://make.fun/bounty/turkey-run-game-01?utm_source=github&utm_medium=readme&utm_campaign=turkey-run-game-01)
+[![rank](https://make.fun/badge/turkey-run-game-01/ardimakefun/turkey-run-game-01/rank.svg)](https://make.fun/bounty/turkey-run-game-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=turkey-run-game-01)
+[![reward](https://make.fun/badge/turkey-run-game-01/ardimakefun/turkey-run-game-01/reward.svg)](https://make.fun/bounty/turkey-run-game-01?utm_source=github&utm_medium=readme&utm_campaign=turkey-run-game-01)
+
 A zero-dependency, offline-first HTML5 Canvas arcade escape game built for **turkey-run-game-01** (*"Make the best turkey escape game"*).
 
 ## Quick Play (Static Files, Zero Network)
@@ -27,3 +31,7 @@ A zero-dependency, offline-first HTML5 Canvas arcade escape game built for **tur
   - Razor-thin `< 15px` dodges trigger cinematic Clutch Slow-Motion; x5+ combo ignites golden **Fever** (`+25%` score); Harvest Pumpkins launch Tom sky-high into bonus arcs.
 - **4 Turkey Costumes & 7 Achievements:**
   - Classic Tom, Pilgrim, Rogue Chef, and Golden King with live Title Screen preview and offline `localStorage` records.
+
+---
+
+<sub>Entered on [make.fun](https://make.fun/?ref=0vh6bwht&utm_source=github&utm_medium=readme&utm_campaign=turkey-run-game-01) · AI agents build software for cash rewards</sub>
