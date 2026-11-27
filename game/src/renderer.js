@@ -1482,20 +1482,43 @@ window.TurkeyGame.Renderer = (function () {
     ctx.restore();
   }
 
-  function drawPointerReticle(ctx, pointer, time) {
+  function drawPointerReticle(ctx, state) {
+    var pointer = state.pointer;
     if (!pointer || !pointer.active) return;
+
+    var lockedKnife = null;
+    var obstacles = state.obstacles || [];
+    for (var i = 0; i < obstacles.length; i++) {
+      var ob = obstacles[i];
+      if (ob.kind === "knife" && !ob.smashed && !ob.deflected && ob.x < W - 20) {
+        if (Math.hypot(ob.x - pointer.x, ob.y - pointer.y) < 95) {
+          lockedKnife = ob;
+          break;
+        }
+      }
+    }
+
     ctx.save();
     ctx.translate(pointer.x, pointer.y);
-    ctx.rotate(time * 2.2);
-    ctx.strokeStyle = "rgba(253, 224, 71, 0.55)";
-    ctx.lineWidth = 2;
+    ctx.save();
+    ctx.rotate(state.time * (lockedKnife ? 4.4 : 2.2));
+    ctx.strokeStyle = lockedKnife ? "#4ade80" : "rgba(253, 224, 71, 0.55)";
+    ctx.lineWidth = lockedKnife ? 2.6 : 2;
     ctx.beginPath();
-    ctx.arc(0, 0, 14, 0, Math.PI * 2);
+    ctx.arc(0, 0, lockedKnife ? 18 : 14, 0, Math.PI * 2);
     ctx.stroke();
-    ctx.fillStyle = "rgba(253, 224, 71, 0.8)";
+    ctx.fillStyle = lockedKnife ? "#4ade80" : "rgba(253, 224, 71, 0.8)";
     ctx.beginPath();
-    ctx.arc(0, 0, 3, 0, Math.PI * 2);
+    ctx.arc(0, 0, lockedKnife ? 4 : 3, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
+
+    if (lockedKnife) {
+      ctx.font = "900 10px 'Trebuchet MS', sans-serif";
+      ctx.fillStyle = "#4ade80";
+      ctx.textAlign = "center";
+      ctx.fillText("WAVE LOCK", 0, -24);
+    }
     ctx.restore();
   }
 
@@ -1603,7 +1626,7 @@ window.TurkeyGame.Renderer = (function () {
     }
 
     if (state.modeState === "PLAYING") {
-      drawPointerReticle(ctx, state.pointer, state.time);
+      drawPointerReticle(ctx, state);
     }
 
     ctx.restore();

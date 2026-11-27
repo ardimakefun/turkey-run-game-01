@@ -485,10 +485,13 @@ window.TurkeyGame.App = (function () {
       return;
     }
 
+    var isFeverWave = state.combo >= 5;
+    var waveRadius = P.WAVE_RADIUS + (isFeverWave ? 55 : 0);
+
     p.waveCooldown = P.WAVE_COOLDOWN;
     p.squashX = 1.18;
     p.squashY = 0.86;
-    particles.addShockwave(p.x + 14, p.y - 32, P.WAVE_RADIUS, "#fde047");
+    particles.addShockwave(p.x + 14, p.y - 32, waveRadius, isFeverWave ? "#4ade80" : "#fde047");
     Audio.playWave();
 
     var reflectedCount = 0;
@@ -505,16 +508,17 @@ window.TurkeyGame.App = (function () {
         Math.hypot(ob.x - state.pointer.x, ob.y - state.pointer.y) < 95 &&
         ob.x < W - 20;
 
-      if (ob.kind === "knife" && (dist <= P.WAVE_RADIUS + 40 || nearPointer)) {
+      if (ob.kind === "knife" && (dist <= waveRadius + 40 || nearPointer)) {
         ob.deflected = true;
         ob.planted = false;
-        ob.vx = -900;
-        ob.vy = (GY - 52 - ob.y) * 1.45;
-        ob.spin = 22;
+        ob.aimedDeflect = nearPointer;
+        ob.vx = isFeverWave ? -1060 : -900;
+        ob.vy = (GY - 52 - ob.y) * (isFeverWave ? 1.65 : 1.45);
+        ob.spin = isFeverWave ? 26 : 22;
         reflectedCount += 1;
         particles.emitSparks(ob.x, ob.y, 10, "#fde047");
-        particles.addPopup(ob.x, ob.y - 30, "DEFLECTED!", "#fde047", 1.05);
-      } else if (ob.kind === "oven" && ob.variant === "steam" && dist <= P.WAVE_RADIUS + 40) {
+        particles.addPopup(ob.x, ob.y - 30, nearPointer ? "SNIPED!" : "DEFLECTED!", "#fde047", 1.08);
+      } else if (ob.kind === "oven" && ob.variant === "steam" && dist <= waveRadius + 40) {
         ob.steamTimer = 0;
         ob.steamActive = false;
         ob.steamWarn = false;
@@ -527,14 +531,14 @@ window.TurkeyGame.App = (function () {
     // Magnetize nearby treats!
     for (var c = 0; c < state.collectibles.length; c++) {
       var item = state.collectibles[c];
-      if (Math.hypot(item.x - p.x, item.baseY - (p.y - 30)) <= P.WAVE_RADIUS + 140) {
+      if (Math.hypot(item.x - p.x, item.baseY - (p.y - 30)) <= waveRadius + 140) {
         item.magnetized = true;
       }
     }
 
     if (reflectedCount === 0 && cooledCount === 0) {
       state.score += CONFIG.SCORE.TAUNT_BONUS;
-      particles.addPopup(p.x + 12, p.y - 108, "GOBBLE! +" + CONFIG.SCORE.TAUNT_BONUS, "#fef08a", 0.9);
+      particles.addPopup(p.x + 12, p.y - 108, (isFeverWave ? "FEVER GOBBLE! +" : "GOBBLE! +") + CONFIG.SCORE.TAUNT_BONUS, "#fef08a", 0.92);
     }
   }
 
@@ -667,11 +671,13 @@ window.TurkeyGame.App = (function () {
     state.comboTimer = 4.2;
     state.maxCombo = Math.max(state.maxCombo, state.combo);
 
-    var pts = CONFIG.SCORE.FARMER_BONK * state.combo;
+    var isFeverBonk = state.combo >= 5 || ob.aimedDeflect;
+    var mult = isFeverBonk ? 1.25 : 1;
+    var pts = Math.round(CONFIG.SCORE.FARMER_BONK * state.combo * mult);
     state.score += pts;
-    state.farmer.bonkedTimer = 1.65;
-    state.farmer.gap = Math.min(CONFIG.FARMER.MAX_GAP, state.farmer.gap + CONFIG.FARMER.BONK_PUSHBACK);
-    state.farmer.speechText = "MY OWN KNIFE?!";
+    state.farmer.bonkedTimer = isFeverBonk ? 2.0 : 1.65;
+    state.farmer.gap = Math.min(CONFIG.FARMER.MAX_GAP, state.farmer.gap + CONFIG.FARMER.BONK_PUSHBACK + (isFeverBonk ? 25 : 0));
+    state.farmer.speechText = isFeverBonk ? "NO! MY STEAK KNIFE!" : "MY OWN KNIFE?!";
     state.farmer.speechTimer = 1.9;
 
     state.hitstopTimer = 0.036;
@@ -679,7 +685,7 @@ window.TurkeyGame.App = (function () {
     state.shakeMag = 9;
     particles.emitSparks(state.farmer.x + 10, GY - 65, 16, "#fde047");
     particles.addShockwave(state.farmer.x + 10, GY - 65, 110, "#fde047");
-    particles.addPopup(state.farmer.x + 18, GY - 118, "BONK! +" + pts, "#fde047", 1.24);
+    particles.addPopup(state.farmer.x + 18, GY - 118, (isFeverBonk ? "SUPER BONK! +" : "BONK! +") + pts, "#fde047", 1.24);
     Audio.playBonk();
     unlockAchievement("return_sender");
     ob.smashed = true;
