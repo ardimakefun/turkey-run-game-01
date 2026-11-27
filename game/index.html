@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Turkey Run — Thanksgiving Escape</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <main class="stage-frame" aria-label="Turkey Run Game Stage">
+      <canvas id="game-canvas" width="1280" height="720" tabindex="0"></canvas>
+
+      <!-- IN-GAME HUD -->
+      <header id="hud" class="hud hidden" aria-live="polite">
+        <div class="hud-left">
+          <div class="hud-pill hud-lives" title="Lives remaining">
+            <span class="hud-label">LIVES</span>
+            <div id="hud-hearts" class="hearts-row" aria-label="3 lives"></div>
+          </div>
+
+          <div id="hud-score-pill" class="hud-pill hud-score-pill">
+            <div class="score-stack">
+              <span class="hud-label">SCORE</span>
+              <span id="hud-score" class="hud-value">0</span>
+            </div>
+            <span id="hud-combo" class="combo-badge hidden">x1</span>
+          </div>
+
+          <div class="hud-pill hud-dash-pill" title="Feather Dash smashes knives &amp; ovens! (Shift / E)">
+            <span class="hud-label">DASH PARRY</span>
+            <div class="dash-bar-track">
+              <div id="hud-dash-fill" class="dash-bar-fill"></div>
+            </div>
+            <span id="hud-dash-state" class="dash-ready-tag">READY</span>
+          </div>
+
+          <div class="hud-pill hud-wave-pill" title="Gobble Wave deflects knives back at Farmer &amp; cools steam! (F / G)">
+            <span class="hud-label">GOBBLE WAVE</span>
+            <div class="dash-bar-track">
+              <div id="hud-wave-fill" class="wave-bar-fill"></div>
+            </div>
+            <span id="hud-wave-state" class="wave-ready-tag">READY</span>
+          </div>
+        </div>
+
+        <div class="hud-center">
+          <div class="hud-pill hud-distance-pill">
+            <div class="distance-top">
+              <span id="hud-zone" class="zone-chip">Farmhouse Kitchen</span>
+              <span id="hud-distance" class="hud-value distance-val">0m / 1,000m</span>
+            </div>
+            <div class="chase-track" aria-hidden="true">
+              <div id="hud-progress-fill" class="chase-fill"></div>
+              <span id="hud-farmer-marker" class="track-marker farmer-marker" title="Farmer proximity">🧑‍🌾</span>
+              <span id="hud-turkey-marker" class="track-marker turkey-marker" title="Your turkey">🦃</span>
+              <span id="hud-goal-marker" class="track-marker goal-marker" title="Sanctuary">🌲</span>
+            </div>
+          </div>
+          <div id="hud-powerup" class="powerup-banner hidden">
+            <span>🌶️ CHILI RUSH!</span>
+            <div class="powerup-bar-track">
+              <div id="hud-powerup-fill" class="powerup-bar-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-right">
+          <button id="btn-hud-wave" class="icon-btn wave-action-btn" type="button" title="Gobble Sonic Wave — Deflect knives &amp; magnetize treats (F / G)">
+            📣 <span class="btn-mini-text">Wave</span>
+          </button>
+          <button id="btn-hud-dash" class="icon-btn dash-action-btn" type="button" title="Feather Dash / Parry (Shift / E / Middle-Click)">
+            ⚡ <span class="btn-mini-text">Dash</span>
+          </button>
+          <button id="btn-mute" class="icon-btn" type="button" title="Toggle Sound (M)" aria-label="Toggle Sound">
+            🔊
+          </button>
+          <button id="btn-pause" class="icon-btn" type="button" title="Pause Game (P)" aria-label="Pause Game">
+            ⏸️
+          </button>
+        </div>
+      </header>
+
+      <!-- ZONE / FRENZY BANNER TOAST -->
+      <div id="zone-banner" class="zone-banner hidden" aria-hidden="true">
+        <span id="zone-banner-eyebrow" class="zone-banner-eyebrow">NEW ZONE</span>
+        <strong id="zone-banner-title">The Barn &amp; Harvest Yard</strong>
+      </div>
+
+      <!-- ACHIEVEMENT TOAST -->
+      <div id="achievement-toast" class="achievement-toast hidden" aria-live="polite">
+        <span id="ach-icon" class="ach-icon">⚡</span>
+        <div class="ach-copy">
+          <span class="ach-eyebrow">ACHIEVEMENT UNLOCKED</span>
+          <strong id="ach-title">Iron Feathers</strong>
+        </div>
+      </div>
+
+      <!-- TITLE SCREEN -->
+      <section id="screen-title" class="overlay-screen overlay-showcase">
+        <div class="card title-card">
+          <div class="title-badge">THANKSGIVING ESCAPE ARCADE</div>
+          <h1 class="game-title">
+            <span class="title-top">TURKEY</span>
+            <span class="title-bottom">RUN!</span>
+          </h1>
+          <p class="title-subtitle">
+            Bust off the platter, parry carving knives back at Farmer Barnaby, and reach Freedom Woods!
+          </p>
+
+          <div class="mode-selector" role="radiogroup" aria-label="Game Mode">
+            <button type="button" class="mode-btn active" data-mode="escape" aria-pressed="true">
+              <span class="mode-title">🏁 Escape Run</span>
+              <span class="mode-desc">Survive 3 zones + Tractor Frenzy to 1,000m</span>
+            </button>
+            <button type="button" class="mode-btn" data-mode="endless" aria-pressed="false">
+              <span class="mode-title">🔥 Endless Panic</span>
+              <span class="mode-desc">Non-stop escalating chase for high scores</span>
+            </button>
+          </div>
+
+          <div class="skin-bar" role="radiogroup" aria-label="Choose Turkey Costume">
+            <span class="skin-bar-label">TURKEY LOOK:</span>
+            <div id="skin-buttons" class="skin-buttons"></div>
+          </div>
+
+          <div class="legend-grid">
+            <div class="legend-box">
+              <h3>Counter-Play &amp; Hazards</h3>
+              <ul>
+                <li><span class="tag tag-danger">🔥 Ovens &amp; Skillets</span> Jump steam vents &amp; sliding pans</li>
+                <li><span class="tag tag-good">📣 Gobble Wave</span> Reflect flying knives into Farmer (Bonk!)</li>
+                <li><span class="tag tag-good">🎃 Pumpkins</span> Spring sky-high for bonus treat arcs</li>
+              </ul>
+            </div>
+            <div class="legend-box">
+              <h3>Keyboard &amp; Mouse</h3>
+              <ul>
+                <li><kbd>Space</kbd>/<kbd>W</kbd>/<kbd>↑</kbd>/<kbd>L-Click</kbd> Jump, Flap &amp; Hold Glide</li>
+                <li><kbd>S</kbd>/<kbd>↓</kbd>/<kbd>R-Click</kbd> Belly Slide &amp; Fast-Fall</li>
+                <li><kbd>Shift</kbd>/<kbd>M-Click</kbd> Dash Parry · <kbd>F</kbd>/<kbd>G</kbd> Gobble Wave</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="title-footer">
+            <div class="records-strip">
+              <span>🏆 Best Score: <strong id="title-best-score">0</strong></span>
+              <span>📏 Best Run: <strong id="title-best-dist">0m</strong></span>
+              <span>🌲 Escapes: <strong id="title-escapes">0</strong></span>
+              <span>🏅 Badges: <strong id="title-achievements">0/7</strong></span>
+            </div>
+            <div class="title-actions">
+              <button id="btn-start" class="primary-btn" type="button">
+                START ESCAPE <span class="btn-hint">(Space)</span>
+              </button>
+              <button id="btn-title-mute" class="secondary-btn" type="button">🔊 Sound: ON</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAUSE SCREEN -->
+      <section id="screen-pause" class="overlay-screen hidden">
+        <div class="card compact-card">
+          <div class="title-badge">FEATHER BREATHER</div>
+          <h2 class="overlay-heading">PAUSED</h2>
+          <p class="overlay-quip">Farmer Barnaby is sharpening his carving knife while waiting...</p>
+          <div class="controls-mini">
+            <div><kbd>Space</kbd> / <kbd>L-Click</kbd> Jump &amp; Double-Flap (Hold = Glide)</div>
+            <div><kbd>S</kbd> / <kbd>↓</kbd> / <kbd>R-Click</kbd> Belly Slide &amp; Fast-Fall</div>
+            <div><kbd>Shift</kbd> / <kbd>E</kbd> / <kbd>M-Click</kbd> Dash Parry (smashes knives &amp; ovens!)</div>
+            <div><kbd>F</kbd> / <kbd>G</kbd> Gobble Wave (reflects knives at Farmer + magnet!)</div>
+          </div>
+          <div class="button-stack">
+            <button id="btn-resume" class="primary-btn" type="button">Resume Run (P)</button>
+            <button id="btn-pause-restart" class="secondary-btn" type="button">Restart Run (R)</button>
+            <button id="btn-pause-title" class="ghost-btn" type="button">Back to Title</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- END SCREEN (CAUGHT / ESCAPED) -->
+      <section id="screen-end" class="overlay-screen overlay-showcase hidden">
+        <div id="end-card" class="card end-card">
+          <div id="end-badge" class="title-badge">CAUGHT!</div>
+          <h2 id="end-heading" class="overlay-heading">ON THE PLATTER!</h2>
+          <p id="end-quip" class="overlay-quip">Farmer Barnaby got you with the basting brush!</p>
+
+          <div id="end-rank-row" class="rank-row hidden">
+            <span class="rank-label">ESCAPE RANK</span>
+            <span id="end-rank-letter" class="rank-seal">S</span>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-tile">
+              <span class="stat-label">Final Score</span>
+              <strong id="end-score" class="stat-num">0</strong>
+              <span id="end-new-score" class="new-record hidden">NEW BEST!</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-label">Distance</span>
+              <strong id="end-distance" class="stat-num">0m</strong>
+              <span id="end-new-dist" class="new-record hidden">FARTHEST!</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-label">Parries / Bonks</span>
+              <strong id="end-nearmiss" class="stat-num">0 / 0</strong>
+              <span id="end-zone" class="stat-sub">Farmhouse Kitchen</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-label">Max Combo</span>
+              <strong id="end-combo" class="stat-num">x1</strong>
+              <span id="end-collected" class="stat-sub">0 treats</span>
+            </div>
+          </div>
+
+          <div id="end-achievements" class="end-achievements hidden"></div>
+
+          <div class="end-actions">
+            <button id="btn-restart" class="primary-btn" type="button">Play Again (R)</button>
+            <button id="btn-continue-endless" class="accent-btn hidden" type="button">Continue Endless →</button>
+            <button id="btn-end-title" class="secondary-btn" type="button">Title Screen</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script defer src="src/constants.js"></script>
+  <script defer src="src/storage.js"></script>
+  <script defer src="src/audio.js"></script>
+  <script defer src="src/particles.js"></script>
+  <script defer src="src/entities.js"></script>
+  <script defer src="src/renderer.js"></script>
+  <script defer src="src/game.js"></script>
+</body>
+</html>
